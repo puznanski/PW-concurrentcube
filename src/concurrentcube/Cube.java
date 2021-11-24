@@ -21,8 +21,6 @@ public class Cube {
     private final int[] SIDES_TO_CHANGE_AX1 = {TOP, RIGHT, BOTTOM, LEFT};
     private final int[] SIDES_TO_CHANGE_AX2 = {LEFT, FRONT, RIGHT, BACK};
 
-    private final boolean DEV_SHOW = true;
-
     public Cube(int size,
                 BiConsumer<Integer, Integer> beforeRotation,
                 BiConsumer<Integer, Integer> afterRotation,
@@ -39,13 +37,7 @@ public class Cube {
         for (int i = 0; i < 6; i++) {
             for (int j = 0; j < this.size; j++) {
                 for (int k = 0; k < this.size; k++) {
-                    if (DEV_SHOW) {
-                        String str = "" + i + j + k;
-                        this.state[i][j][k] = Integer.parseInt(str);
-                    }
-                    else {
-                        this.state[i][j][k] = i;
-                    }
+                    this.state[i][j][k] = i;
                 }
             }
         }
@@ -65,7 +57,7 @@ public class Cube {
         }
     }
 
-    private void rotateSides(int[][][] indexesToSwap, int[] order, int direction) {
+    private void rotateSwapHelper(int[][][] indexesToSwap, int[] order, int direction) {
         int[] temp = new int[size];
 
         int dirHelper = 0;
@@ -75,7 +67,7 @@ public class Cube {
         }
 
         for (int i = 0; i < size; i++) {
-            temp[i] = state[order[Math.abs(dirHelper)]][indexesToSwap[0][i][0]][indexesToSwap[0][i][1]];
+            temp[i] = state[order[dirHelper]][indexesToSwap[0][i][0]][indexesToSwap[0][i][1]];
         }
 
         for (int i = 1; i < 4; i++) {
@@ -87,7 +79,7 @@ public class Cube {
         }
 
         for (int i = 0; i < size; i++) {
-            state[order[Math.abs(dirHelper)]][indexesToSwap[0][i][0]][indexesToSwap[0][i][1]] = temp[i];
+            state[order[dirHelper]][indexesToSwap[0][i][0]][indexesToSwap[0][i][1]] = temp[i];
         }
     }
 
@@ -100,38 +92,46 @@ public class Cube {
 
                 for (int j = 0; j < size; j++) {
                     switch (currentSide) {
-                        case TOP, FRONT, BOTTOM -> {
+                        case TOP:
+                        case FRONT:
+                        case BOTTOM: {
                             indexesToSwap[i][j][0] = j;
-                            indexesToSwap[i][j][1] = layer - 1;
+                            indexesToSwap[i][j][1] = layer;
+                            break;
                         }
-                        case BACK -> {
+                        case BACK: {
                             indexesToSwap[i][j][0] = size - j - 1;
-                            indexesToSwap[i][j][1] = size - layer;
+                            indexesToSwap[i][j][1] = size - layer - 1;
+                            break;
                         }
                     }
                 }
             }
 
-            rotateSides(indexesToSwap, SIDES_TO_CHANGE_AX0, 1);
+            rotateSwapHelper(indexesToSwap, SIDES_TO_CHANGE_AX0, 1);
         }
         else {
             for (int i = 3; i >= 0; i--) {
-                int currentSide = SIDES_TO_CHANGE_AX0[i];
+                int currentSide = SIDES_TO_CHANGE_AX0[3 - i];
 
                 for (int j = 0; j < size; j++) {
                     switch (currentSide) {
-                        case TOP, FRONT, BOTTOM -> {
+                        case TOP:
+                        case FRONT:
+                        case BOTTOM: {
                             indexesToSwap[i][j][0] = size - j - 1;
-                            indexesToSwap[i][j][1] = size - layer;
+                            indexesToSwap[i][j][1] = size - layer - 1;
+                            break;
                         }
-                        case BACK -> {
+                        case BACK: {
                             indexesToSwap[i][j][0] = j;
-                            indexesToSwap[i][j][1] = layer - 1;
+                            indexesToSwap[i][j][1] = layer;
+                            break;
                         }
                     }
                 }
             }
-            rotateSides(indexesToSwap, SIDES_TO_CHANGE_AX0, -1);
+            rotateSwapHelper(indexesToSwap, SIDES_TO_CHANGE_AX0, -1);
 
         }
     }
@@ -145,55 +145,63 @@ public class Cube {
 
                 for (int j = 0; j < size; j++) {
                     switch (currentSide) {
-                        case TOP -> {
-                            indexesToSwap[i][j][0] = size - layer;
+                        case TOP: {
+                            indexesToSwap[i][j][0] = size - layer - 1;
                             indexesToSwap[i][j][1] = j;
+                            break;
                         }
-                        case RIGHT -> {
+                        case RIGHT: {
                             indexesToSwap[i][j][0] = j;
-                            indexesToSwap[i][j][1] = layer - 1;
+                            indexesToSwap[i][j][1] = layer;
+                            break;
                         }
-                        case BOTTOM -> {
-                            indexesToSwap[i][j][0] = layer - 1;
+                        case BOTTOM: {
+                            indexesToSwap[i][j][0] = layer;
                             indexesToSwap[i][j][1] = size - j - 1;
+                            break;
                         }
-                        case LEFT -> {
+                        case LEFT: {
                             indexesToSwap[i][j][0] = size - j - 1;
-                            indexesToSwap[i][j][1] = size - layer;
+                            indexesToSwap[i][j][1] = size - layer - 1;
+                            break;
                         }
                     }
                 }
             }
 
-            rotateSides(indexesToSwap, SIDES_TO_CHANGE_AX1, 1);
+            rotateSwapHelper(indexesToSwap, SIDES_TO_CHANGE_AX1, 1);
         }
         else {
             for (int i = 3; i >= 0; i--) {
-                int currentSide = SIDES_TO_CHANGE_AX1[i];
+                int currentSide = SIDES_TO_CHANGE_AX1[3 - i];
 
                 for (int j = 0; j < size; j++) {
                     switch (currentSide) {
-                        case TOP -> {
-                            indexesToSwap[i][j][0] = layer - 1;
+                        case TOP: {
+                            indexesToSwap[i][j][0] = layer;
                             indexesToSwap[i][j][1] = size - j - 1;
+                            break;
                         }
-                        case RIGHT -> {
+                        case RIGHT: {
                             indexesToSwap[i][j][0] = size - j - 1;
-                            indexesToSwap[i][j][1] = size - layer;
+                            indexesToSwap[i][j][1] = size - layer - 1;
+                            break;
                         }
-                        case BOTTOM -> {
-                            indexesToSwap[i][j][0] = size - layer;
+                        case BOTTOM: {
+                            indexesToSwap[i][j][0] = size - layer - 1;
                             indexesToSwap[i][j][1] = j;
+                            break;
                         }
-                        case LEFT -> {
+                        case LEFT: {
                             indexesToSwap[i][j][0] = j;
-                            indexesToSwap[i][j][1] = layer - 1;
+                            indexesToSwap[i][j][1] = layer;
+                            break;
                         }
                     }
                 }
             }
 
-            rotateSides(indexesToSwap, SIDES_TO_CHANGE_AX1, -1);
+            rotateSwapHelper(indexesToSwap, SIDES_TO_CHANGE_AX1, -1);
         }
     }
 
@@ -203,22 +211,22 @@ public class Cube {
         if (side == BOTTOM) {
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < size; j++) {
-                    indexesToSwap[i][j][0] = size - layer;
+                    indexesToSwap[i][j][0] = size - layer - 1;
                     indexesToSwap[i][j][1] = j;
                 }
             }
 
-            rotateSides(indexesToSwap, SIDES_TO_CHANGE_AX2, 1);
+            rotateSwapHelper(indexesToSwap, SIDES_TO_CHANGE_AX2, 1);
         }
         else {
             for (int i = 3; i >= 0; i--) {
                 for (int j = 0; j < size; j++) {
-                    indexesToSwap[i][j][0] = layer - 1;
+                    indexesToSwap[i][j][0] = layer;
                     indexesToSwap[i][j][1] = size - j - 1;
                 }
             }
 
-            rotateSides(indexesToSwap, SIDES_TO_CHANGE_AX2, -1);
+            rotateSwapHelper(indexesToSwap, SIDES_TO_CHANGE_AX2, -1);
         }
     }
 
@@ -228,12 +236,21 @@ public class Cube {
         beforeRotation.accept(side, layer);
 
         switch (axis) {
-            case 0 -> rotateAxis0(side, layer); //left, right
-            case 1 -> rotateAxis1(side, layer); //front, back
-            case 2 -> rotateAxis2(side, layer); //top, bottom
+            case 0: {
+                rotateAxis0(side, layer); //left, right
+                break;
+            }
+            case 1: {
+                rotateAxis1(side, layer); //front, back
+                break;
+            }
+            case 2: {
+                rotateAxis2(side, layer); //top, bottom
+                break;
+            }
         }
 
-        if (layer == 1 || layer == size) {
+        if (layer == 0 || layer == size - 1) {
             rotateFace(side);
         }
 
@@ -246,41 +263,11 @@ public class Cube {
         beforeShowing.run();
 
         for (int i = 0; i < 6; i++) {
-            switch (i) {
-                case 0 -> stringBuilder.append("Top(");
-                case 1 -> stringBuilder.append("Left(");
-                case 2 -> stringBuilder.append("Front(");
-                case 3 -> stringBuilder.append("Right(");
-                case 4 -> stringBuilder.append("Back(");
-                case 5 -> stringBuilder.append("Bottom(");
-            }
-
             for (int j = 0; j < size; j++) {
                 for (int k = 0; k < size; k++) {
-                    if (k % size == 0) {
-                        stringBuilder.append("\n");
-                    }
-
-                    if (DEV_SHOW) {
-                        int value = state[i][j][k];
-                        int length = (int) (Math.log10(value) + 1);
-
-                        if (value == 0) length = 1;
-
-                        stringBuilder.append("0".repeat(Math.max(0, 3 - length)));
-                        stringBuilder.append(value);
-                    }
-                    else {
-                        stringBuilder.append(state[i][j][k]);
-                    }
-
-                    if (j != size - 1 || k != size - 1) {
-                        stringBuilder.append(", ");
-                    }
+                    stringBuilder.append(state[i][j][k]);
                 }
             }
-
-            stringBuilder.append(")\n");
         }
 
         afterShowing.run();
