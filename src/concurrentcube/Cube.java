@@ -43,16 +43,47 @@ public class Cube {
         }
     }
 
-    private void rotateFace(int side) {
+    private int getOppositeSideIndex(int side) {
+        switch (side) {
+            case TOP:
+                return BOTTOM;
+
+            case LEFT:
+                return RIGHT;
+
+            case FRONT:
+                return BACK;
+
+            case RIGHT:
+                return LEFT;
+
+            case BACK:
+                return FRONT;
+
+            default: //bottom
+                return TOP;
+        }
+    }
+
+    private void rotateFace(int side, int direction) {
         int[][] temp = new int[size][size];
 
         for (int i = 0; i < size; i++) {
             System.arraycopy(state[side][i], 0, temp[i], 0, size);
         }
 
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                state[side][j][size - i - 1] = temp[i][j];
+        if(direction == 1) {
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < size; j++) {
+                    state[side][j][size - i - 1] = temp[i][j];
+                }
+            }
+        }
+        else {
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < size; j++) {
+                    state[side][size - j - 1][i] = temp[i][j];
+                }
             }
         }
     }
@@ -250,8 +281,11 @@ public class Cube {
             }
         }
 
-        if (layer == 0 || layer == size - 1) {
-            rotateFace(side);
+        if (layer == 0) {
+            rotateFace(side, 1);
+        }
+        else if (layer == size - 1) {
+            rotateFace(getOppositeSideIndex(side), -1);
         }
 
         afterRotation.accept(side, layer);
