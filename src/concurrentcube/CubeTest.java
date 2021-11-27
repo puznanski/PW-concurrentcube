@@ -3,6 +3,8 @@ package concurrentcube;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -96,6 +98,40 @@ public class CubeTest {
                 cube.rotate(2, 2);
             }
 
+            assertEquals(expected, cube.show());
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void testSequence1260Concurrent() {
+        Cube cube = new Cube(3, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+        String expected;
+
+        ExecutorService taskExecutorThreads = Executors.newFixedThreadPool(10);
+
+        try {
+            expected = cube.show();
+
+            for (int i = 0; i < 1260; i++) {
+                taskExecutorThreads.submit(() -> {
+                    try {
+                        cube.rotate(1, 0);
+                        cube.rotate(2, 2);
+                        cube.rotate(4, 0);
+                        cube.rotate(5, 1);
+                        cube.rotate(0, 0);
+                        cube.rotate(3, 1);
+                        cube.rotate(2, 2);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+
+            taskExecutorThreads.shutdown();
             assertEquals(expected, cube.show());
         }
         catch (InterruptedException e) {
