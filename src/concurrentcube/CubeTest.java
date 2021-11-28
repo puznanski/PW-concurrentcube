@@ -11,12 +11,13 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 
 public class CubeTest {
-    private final int REPETITION_NUM = 50;
+    private final int REPETITION_NUM = 100;
 
     private String getExpectedFromFile(String fileName) throws FileNotFoundException {
         StringBuilder expected = new StringBuilder();
@@ -33,6 +34,15 @@ public class CubeTest {
     }
 
     @Test
+    @DisplayName("Initialization test")
+    public void initializationTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(10, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+        String actual = cube.show() + "\n";
+        assertEquals(getExpectedFromFile("initializationTest.txt"), actual);
+    }
+
+    @Test
+    @DisplayName("Sequential rotations test on 5x5x5 cube")
     public void sequentialRotationsTest5x5x5() throws InterruptedException, FileNotFoundException {
         Cube cube = new Cube(5, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         StringBuilder actual = new StringBuilder();
@@ -49,6 +59,7 @@ public class CubeTest {
     }
 
     @Test
+    @DisplayName("Sequential rotations test on 10x10x10 cube")
     public void sequentialRotationsTest10x10x10() throws InterruptedException, FileNotFoundException {
         Cube cube = new Cube(10, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         StringBuilder actual = new StringBuilder();
@@ -65,14 +76,79 @@ public class CubeTest {
     }
 
     @Test
+    @DisplayName("Sequential rotations around axis 0 test on 50x50x50 cube")
+    public void bigAxis0RotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+        StringBuilder actual = new StringBuilder();
+
+        for (int i = 0; i < 50; i++) {
+            cube.rotate(1, i);
+            actual.append(cube.show()).append("\n");
+            cube.rotate(3, i);
+            actual.append(cube.show()).append("\n");
+        }
+
+        assertEquals(getExpectedFromFile("bigAxis0RotationsTest.txt"), actual.toString());
+    }
+
+    @Test
+    @DisplayName("Sequential rotations around axis 1 test on 50x50x50 cube")
+    public void bigAxis1RotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+        StringBuilder actual = new StringBuilder();
+
+        for (int i = 0; i < 50; i++) {
+            cube.rotate(2, i);
+            actual.append(cube.show()).append("\n");
+            cube.rotate(4, i);
+            actual.append(cube.show()).append("\n");
+        }
+
+        assertEquals(getExpectedFromFile("bigAxis1RotationsTest.txt"), actual.toString());
+    }
+
+    @Test
+    @DisplayName("Sequential rotations around axis 2 test on 50x50x50 cube")
+    public void bigAxis2RotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+        StringBuilder actual = new StringBuilder();
+
+        for (int i = 0; i < 50; i++) {
+            cube.rotate(0, i);
+            actual.append(cube.show()).append("\n");
+            cube.rotate(5, i);
+            actual.append(cube.show()).append("\n");
+        }
+
+        assertEquals(getExpectedFromFile("bigAxis2RotationsTest.txt"), actual.toString());
+    }
+
+    @Test
+    @DisplayName("Sequential rotations test on 50x50x50 cube")
+    public void bigRotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+        StringBuilder actual = new StringBuilder();
+
+        for (int i = 0; i < 50; i++) {
+            for (int j = 0; j < 6; j++) {
+                cube.rotate(j, i);
+                actual.append(cube.show()).append("\n");
+                cube.rotate(j, i);
+                actual.append(cube.show()).append("\n");
+            }
+        }
+
+        assertEquals(getExpectedFromFile("bigRotationsTest.txt"), actual.toString());
+    }
+
+    @Test
+    @DisplayName("Repeated sequence test")
     public void repeatedSequenceTest() throws InterruptedException {
-        //1260 sequences are necessary to get back to the original position of 3x3x3 Rubik's Cube.
+        //1260 repetitions of the same sequence are necessary to get back to the initial state of 3x3x3 Rubik's Cube.
         //https://math.stackexchange.com/questions/2279155/period-for-a-rubiks-cube-repeated-manipulation
 
         Cube cube = new Cube(3, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
-        String expected;
-
-        expected = cube.show();
+        String expected = cube.show();
 
         for (int i = 0; i < 1260; i++) {
             cube.rotate(1, 0);
@@ -88,10 +164,12 @@ public class CubeTest {
     }
 
     @RepeatedTest(REPETITION_NUM)
+    @DisplayName("Simple concurrent rotations test")
     public void simpleConcurrentTest() throws InterruptedException {
         Cube sequential = new Cube(3, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         Cube concurrent = new Cube(3, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         String expected;
+
         ExecutorService taskExecutorThreads = Executors.newFixedThreadPool(4);
 
         for (int i = 0; i < 4; i++) {
