@@ -24,6 +24,7 @@ public class Cube {
 
     private final int NUMBER_OF_GROUPS = 4;
     private final int NUMBER_OF_SHOW_GROUP = 3;
+    private final int NUMBER_OF_SIDES = 6;
 
     private final Semaphore mutex = new Semaphore(1, true);
     private final Semaphore firstsOnes = new Semaphore(0, true);
@@ -43,13 +44,13 @@ public class Cube {
                 Runnable afterShowing) {
 
         this.size = size;
-        this.state = new int[6][this.size][this.size];
+        this.state = new int[NUMBER_OF_SIDES][this.size][this.size];
         this.beforeRotation = beforeRotation;
         this.afterRotation = afterRotation;
         this.beforeShowing = beforeShowing;
         this.afterShowing = afterShowing;
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < NUMBER_OF_SIDES; i++) {
             for (int j = 0; j < this.size; j++) {
                 for (int k = 0; k < this.size; k++) {
                     this.state[i][j][k] = i;
@@ -167,15 +168,6 @@ public class Cube {
 
             default: //bottom
                 return TOP;
-        }
-    }
-
-    private int getLayerIndex(int side, int layer) {
-        if (side == TOP || side == LEFT || side == FRONT) {
-            return layer;
-        }
-        else {
-            return size - layer - 1;
         }
     }
 
@@ -379,7 +371,15 @@ public class Cube {
         int axis = ((side + 2) % 5) % 3;
 
         entryProtocol(axis);
-        layerMutex[axis][getLayerIndex(side, layer)].acquire();
+
+        try {
+            layerMutex[axis][Utils.getLayerIndex(side, layer, size)].acquire();
+        }
+        catch (InterruptedException e) {
+            exitProtocol();
+            throw e;
+        }
+
         beforeRotation.accept(side, layer);
 
         switch (axis) {
@@ -405,7 +405,7 @@ public class Cube {
         }
 
         afterRotation.accept(side, layer);
-        layerMutex[axis][getLayerIndex(side, layer)].release();
+        layerMutex[axis][Utils.getLayerIndex(side, layer, size)].release();
         exitProtocol();
     }
 
@@ -415,7 +415,7 @@ public class Cube {
         entryProtocol(NUMBER_OF_SHOW_GROUP);
         beforeShowing.run();
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < NUMBER_OF_SIDES; i++) {
             for (int j = 0; j < size; j++) {
                 for (int k = 0; k < size; k++) {
                     stringBuilder.append(state[i][j][k]);
