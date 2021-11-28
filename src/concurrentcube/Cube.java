@@ -1,5 +1,6 @@
 package concurrentcube;
 
+import java.util.concurrent.Semaphore;
 import java.util.function.BiConsumer;
 
 public class Cube {
@@ -21,6 +22,20 @@ public class Cube {
     private final int[] SIDES_TO_CHANGE_AX1 = {TOP, RIGHT, BOTTOM, LEFT};
     private final int[] SIDES_TO_CHANGE_AX2 = {LEFT, FRONT, RIGHT, BACK};
 
+    private final int NUMBER_OF_GROUPS = 4;
+    private final int NUMBER_OF_SHOW_GROUP = 3;
+
+    private final Semaphore mutex = new Semaphore(1, true);
+    private final Semaphore firstsOnes = new Semaphore(0, true);
+    private final Semaphore[] others = new Semaphore[NUMBER_OF_GROUPS];
+    private final Semaphore[][] layerMutex;
+
+    private int activeGroup = -1;
+    private int workingNumber = 0;
+    private final int[] waitingNumber = {0, 0, 0, 0};
+    private int groupsWaiting = 0;
+
+
     public Cube(int size,
                 BiConsumer<Integer, Integer> beforeRotation,
                 BiConsumer<Integer, Integer> afterRotation,
@@ -40,6 +55,96 @@ public class Cube {
                     this.state[i][j][k] = i;
                 }
             }
+        }
+
+        for (int i = 0; i < NUMBER_OF_GROUPS; i++) {
+            others[i] = new Semaphore(0, true);
+        }
+
+        layerMutex = new Semaphore[3][this.size];
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < this.size; j++) {
+                layerMutex[i][j] = new Semaphore(1, true);
+            }
+        }
+    }
+
+    private void interruptionHandler(boolean interrupted, int groupNumber) throws InterruptedException {
+        if (!interrupted) {
+            activeGroup = groupNumber;
+        }
+        else if (workingNumber == 0 && waitingNumber[groupNumber] == 0) {
+            if (groupsWaiting > 0) {
+                firstsOnes.release();
+            }
+            else {
+                activeGroup = -1;
+                mutex.release();
+            }
+
+            throw new InterruptedException();
+        }
+    }
+
+    private void entryProtocol(int groupNumber) throws InterruptedException {
+        mutex.acquire();
+
+        boolean interrupted = false;
+
+        if (activeGroup == -1) {
+            activeGroup = groupNumber;
+        }
+        else if (groupsWaiting > 0 || activeGroup != groupNumber){
+            waitingNumber[groupNumber]++;
+
+            if (waitingNumber[groupNumber] == 1) {
+                groupsWaiting++;
+                mutex.release();
+                firstsOnes.acquireUninterruptibly();
+                groupsWaiting--;
+            }
+            else {
+                mutex.release();
+                others[groupNumber].acquireUninterruptibly();
+            }
+
+            waitingNumber[groupNumber]--;
+            interrupted = Thread.interrupted();
+            interruptionHandler(interrupted, groupNumber);
+        }
+
+        if (!interrupted) {
+            workingNumber++;
+        }
+
+        if (waitingNumber[groupNumber] > 0) {
+            others[groupNumber].release();
+        }
+        else {
+            mutex.release();
+        }
+
+        if (interrupted) {
+            throw new InterruptedException();
+        }
+    }
+
+    private void exitProtocol() {
+        mutex.acquireUninterruptibly();
+        workingNumber--;
+
+        if (workingNumber == 0) {
+            if (groupsWaiting > 0) {
+                firstsOnes.release();
+            }
+            else {
+                activeGroup = -1;
+                mutex.release();
+            }
+        }
+        else {
+            mutex.release();
         }
     }
 
@@ -62,6 +167,15 @@ public class Cube {
 
             default: //bottom
                 return TOP;
+        }
+    }
+
+    private int getLayerIndex(int side, int layer) {
+        if (side == TOP || side == LEFT || side == FRONT) {
+            return layer;
+        }
+        else {
+            return size - layer - 1;
         }
     }
 
@@ -264,6 +378,8 @@ public class Cube {
     public void rotate(int side, int layer) throws InterruptedException {
         int axis = ((side + 2) % 5) % 3;
 
+        entryProtocol(axis);
+        layerMutex[axis][getLayerIndex(side, layer)].acquire();
         beforeRotation.accept(side, layer);
 
         switch (axis) {
@@ -289,11 +405,14 @@ public class Cube {
         }
 
         afterRotation.accept(side, layer);
+        layerMutex[axis][getLayerIndex(side, layer)].release();
+        exitProtocol();
     }
 
     public String show() throws InterruptedException {
         StringBuilder stringBuilder = new StringBuilder();
 
+        entryProtocol(NUMBER_OF_SHOW_GROUP);
         beforeShowing.run();
 
         for (int i = 0; i < 6; i++) {
@@ -305,6 +424,7 @@ public class Cube {
         }
 
         afterShowing.run();
+        exitProtocol();
 
         return stringBuilder.toString();
     }
