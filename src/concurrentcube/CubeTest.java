@@ -76,69 +76,51 @@ public class CubeTest {
     }
 
     @Test
-    @DisplayName("Sequential rotations around axis 0 test on 50x50x50 cube")
-    public void bigAxis0RotationsTest() throws InterruptedException, FileNotFoundException {
-        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+    @DisplayName("Sequential rotations around axis 0 test on 5x5x5 cube")
+    public void axis0RotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(5, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         StringBuilder actual = new StringBuilder();
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 5; i++) {
             cube.rotate(1, i);
             actual.append(cube.show()).append("\n");
             cube.rotate(3, i);
             actual.append(cube.show()).append("\n");
         }
 
-        assertEquals(getExpectedFromFile("bigAxis0RotationsTest.txt"), actual.toString());
+        assertEquals(getExpectedFromFile("axis0RotationsTest.txt"), actual.toString());
     }
 
     @Test
-    @DisplayName("Sequential rotations around axis 1 test on 50x50x50 cube")
-    public void bigAxis1RotationsTest() throws InterruptedException, FileNotFoundException {
-        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+    @DisplayName("Sequential rotations around axis 1 test on 5x5x5 cube")
+    public void axis1RotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(5, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         StringBuilder actual = new StringBuilder();
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 5; i++) {
             cube.rotate(2, i);
             actual.append(cube.show()).append("\n");
             cube.rotate(4, i);
             actual.append(cube.show()).append("\n");
         }
 
-        assertEquals(getExpectedFromFile("bigAxis1RotationsTest.txt"), actual.toString());
+        assertEquals(getExpectedFromFile("axis1RotationsTest.txt"), actual.toString());
     }
 
     @Test
-    @DisplayName("Sequential rotations around axis 2 test on 50x50x50 cube")
-    public void bigAxis2RotationsTest() throws InterruptedException, FileNotFoundException {
-        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
+    @DisplayName("Sequential rotations around axis 2 test on 5x5x5 cube")
+    public void axis2RotationsTest() throws InterruptedException, FileNotFoundException {
+        Cube cube = new Cube(5, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
         StringBuilder actual = new StringBuilder();
 
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 5; i++) {
             cube.rotate(0, i);
             actual.append(cube.show()).append("\n");
             cube.rotate(5, i);
             actual.append(cube.show()).append("\n");
         }
 
-        assertEquals(getExpectedFromFile("bigAxis2RotationsTest.txt"), actual.toString());
-    }
-
-    @Test
-    @DisplayName("Sequential rotations test on 50x50x50 cube")
-    public void bigRotationsTest() throws InterruptedException, FileNotFoundException {
-        Cube cube = new Cube(50, (x, y) -> {}, (x, y) -> {}, () -> {}, () -> {});
-        StringBuilder actual = new StringBuilder();
-
-        for (int i = 0; i < 50; i++) {
-            for (int j = 0; j < 6; j++) {
-                cube.rotate(j, i);
-                actual.append(cube.show()).append("\n");
-                cube.rotate(j, i);
-                actual.append(cube.show()).append("\n");
-            }
-        }
-
-        assertEquals(getExpectedFromFile("bigRotationsTest.txt"), actual.toString());
+        assertEquals(getExpectedFromFile("axis2RotationsTest.txt"), actual.toString());
     }
 
     @Test
